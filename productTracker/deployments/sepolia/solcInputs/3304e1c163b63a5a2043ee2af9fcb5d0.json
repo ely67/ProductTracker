@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/productTracker.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\n/**\n * @author Elyas Sarjoughi\n * @title Product Tracker Contract\n * @notice This contract allows tracking and management of products.\n * @dev Products are uniquely identified by their product codes and can be associated with tags.\n *      The contract owner can add, remove, and transfer ownership of the contract.\n */\n\ncontract productTracker {\n    // Define a struct to represent a product\n    struct Product {\n        address creator;        // The address of the individual who executed the function.\n        string productName;     // Name of the product\n        uint256 productCode;    // Unique product code\n        uint256 entryDate;      // the entry date of the product\n        string tag;             // Product tag or category\n    }\n\n    // Mapping to store products by their unique product code\n    mapping(uint256 => Product) public products;\n\n    // Total count of products\n    uint256 public productCount;\n\n    // Address of the contract owner\n    address public owner;\n\n    // Define events to log important contract actions\n    event ProductAdded(address indexed creator, string productName, uint256 productCode, string tag);\n    event ProductModified(uint256 productCode, string newProductName, string newTag);\n    event ProductRemoved(uint256 productCode);\n\n    // Modifier to restrict access to the contract owner\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Only the owner can perform this action\");\n        _;\n    }\n\n    // Constructor to set the initial contract owner\n    constructor() {\n        owner = msg.sender;\n        productCount = 0;\n    }\n\n    // Function to add a new product to the contract\n    function addProduct(string memory _productName, uint256 _productCode, string memory _tag) public onlyOwner {\n        // Check if a product with the same code already exists\n        require(products[_productCode].productCode == 0, \"Product with this code already exists\");\n\n        // Create a new product and store it in the mapping\n        products[_productCode] = Product({\n            creator: msg.sender,\n            productName: _productName,\n            productCode: _productCode,\n            entryDate: block.timestamp,\n            tag: _tag\n        });\n\n        // Increment the product count\n        productCount++;\n\n        // Emit the ProductAdded event to log the addition of a new product\n        emit ProductAdded(msg.sender, _productName, _productCode, _tag);\n    }\n\n    // Function to retrieve product details by its unique product code\n    function getProduct(uint256 _productCode) public view returns (\n        address creator,\n        string memory productName,\n        uint256 entryDate,\n        string memory tag\n    ) {\n        Product memory product = products[_productCode];\n\n        // Check if the product with the given code exists\n        require(product.productCode != 0, \"Product with this code does not exist\");\n\n        // Return the product details\n        return (\n            product.creator,\n            product.productName,\n            product.entryDate,\n            product.tag\n        );\n    }\n\n    // Function to modify product details (can only be called by the owner)\n    function modifyProduct(uint256 _productCode, string memory _newName, string memory _newTag) public onlyOwner {\n        // Retrieve the product from storage\n        Product storage product = products[_productCode];\n\n        // Check if the product with the given code exists\n        require(product.productCode != 0, \"Product with this code does not exist\");\n\n        // Update product details\n        product.productName = _newName;\n        product.tag = _newTag;\n\n        // Emit the ProductModified event to log the modification of product details\n        emit ProductModified(_productCode, _newName, _newTag);\n    }\n\n    // Function to remove a product from the contract (can only be called by the owner)\n    function removeProduct(uint256 _productCode) public onlyOwner {\n        // Retrieve the product from storage\n        Product memory product = products[_productCode];\n\n        // Check if the product with the given code exists\n        require(product.productCode != 0, \"Product with this code does not exist\");\n\n        // Delete the product and decrement the product count\n        delete products[_productCode];\n        productCount--;\n\n        // Emit the ProductRemoved event to log the removal of a product\n        emit ProductRemoved(_productCode);\n    }\n\n    function getProductCount() public view returns(uint256) {\n        return productCount;\n    }\n\n}\n\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

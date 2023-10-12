@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/productTracker.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\n/**\n * @author Elyas Sarjoughi\n * @title Product Tracker Contract\n * @notice This contract allows tracking and management of products.\n * @dev Products are uniquely identified by their product codes and can be associated with tags.\n *      The contract owner can add, remove, and transfer ownership of the contract.\n */\n\ncontract productTracker {\n    struct Product {\n        address creator;\n        string productName;\n        uint256 entryDate;\n        uint256 productCode; // Use uint256 for product code\n        string tag;\n    }\n\n    mapping(uint256 => Product) public products;\n    mapping(uint256 => bool) public productExists; // Track existence of products\n    mapping(string => uint256[]) public productsByTag; // Mapping from tag to product IDs\n    uint256 public productCount;\n    address public owner;\n\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Only the owner can perform this action\");\n        _;\n    }\n\n    constructor() {\n        owner = msg.sender;\n        productCount = 0;\n    }\n\n    function addProduct(string memory _productName, uint256 _productCode, string memory _tag) public onlyOwner {\n        require(!productExists[_productCode], \"Product with this code already exists\");\n        \n        productCount++;\n        products[productCount] = Product({\n            creator: msg.sender,\n            productName: _productName,\n            entryDate: block.timestamp,\n            productCode: _productCode,\n            tag: _tag\n        });\n\n        productExists[_productCode] = true; // Mark product as existing\n\n        // Add the product to the list of products with the same tag\n        productsByTag[_tag].push(productCount);\n    }\n\n    function getProduct(uint256 _productCode) public view returns (\n        address creator,\n        string memory productName,\n        uint256 entryDate,\n        string memory tag\n    ) {\n        require(productExists[_productCode], \"Product with this code does not exist\");\n        \n        // Search for the product with the given product code\n        for (uint256 i = 1; i <= productCount; i++) {\n            if (products[i].productCode == _productCode) {\n                Product memory product = products[i];\n                return (\n                    product.creator,\n                    product.productName,\n                    product.entryDate,\n                    product.tag\n                );\n            }\n        }\n\n        // Product not found (this should not happen due to the productExists check)\n        revert(\"Product not found\");\n    }\n\n    // Function to search products by tag\n    function getProductsByTag(string memory _tag) public view returns (uint256[] memory) {\n        return productsByTag[_tag];\n    }\n\n    function removeProduct(uint256 _productCode) public onlyOwner {\n        require(productExists[_productCode], \"Product with this code does not exist\");\n    \n        // Search for the product with the given product code\n        for (uint256 i = 1; i <= productCount; i++) {\n            if (products[i].productCode == _productCode) {\n                // Delete the product and mark it as non-existent\n                delete products[i];\n                productExists[_productCode] = false;\n\n                // Remove the product from the list of products with the same tag\n                removeProductFromTagList(products[i].tag, i);\n\n                // Decrement the product count\n                productCount--;\n                return;\n            }\n        }\n\n        // Product not found (this should not happen due to the productExists check)\n        revert(\"Product not found\");\n    }\n\n    function transferOwnership(address newOwner) public onlyOwner {\n        owner = newOwner;\n    }\n\n    // Internal function to remove a product from the list of products with the same tag\n    function removeProductFromTagList(string memory _tag, uint256 productId) internal {\n        uint256[] storage productList = productsByTag[_tag];\n        for (uint256 i = 0; i < productList.length; i++) {\n            if (productList[i] == productId) {\n                productList[i] = productList[productList.length - 1];\n                productList.pop();\n                return;\n            }\n        }\n    }\n}\n\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

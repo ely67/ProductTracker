@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/ProductTracker.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract productTracker {\n    struct Product {\n        address producer;\n        string productName;\n        uint256 productionDate;\n        string location;\n    }\n\n    mapping(uint256 => Product) public products;\n    uint256 public productCount;\n\n    constructor() {\n        productCount = 0;\n    }\n\n    function addProduct(string memory _productName, string memory _location) public {\n        productCount++;\n        products[productCount] = Product({\n            producer: msg.sender,\n            productName: _productName,\n            productionDate: block.timestamp,\n            location: _location\n        });\n    }\n\n    function getProduct(uint256 _productId) public view returns (\n        address producer,\n        string memory productName,\n        uint256 productionDate,\n        string memory location\n    ) {\n        require(_productId <= productCount && _productId > 0, \"Product ID does not exist\");\n        Product memory product = products[_productId];\n        return (\n            product.producer,\n            product.productName,\n            product.productionDate,\n            product.location\n        );\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
